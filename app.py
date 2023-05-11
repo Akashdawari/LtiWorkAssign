@@ -3,19 +3,55 @@ from flask import Response
 import docx2txt as d2t
 import pytesseract
 from PIL import Image
+import pandas as pd
 import os
 import re
 
 
 app = Flask(__name__)
 
+# Landing Page
 @app.route("/", methods=['GET'])
 def home():
-    return render_template('index.html')
+    return render_template('landingPage.html')
+
+# @app.route("/textSearcher", methods=['GET'])
+# def doc_text_search():
+#     return render_template('docTextSearch.html')
 
 
 
-@app.route("/textSearcher", methods=['POST'])
+# @app.route("/productSearch", methods=['GET'])
+# def product_detail():
+#     return render_template('productDetail.html')
+
+
+# Product Search Page
+@app.route("/productSearch", methods=['GET','POST'])
+def product_searcher():
+    try:
+        if request.method == 'POST':
+            t = request.form["productID"]
+            df = pd.read_excel("db_files/products.xlsx")
+            print(df.columns)
+            df = df[df['id']==t]
+            result=[]
+            if len(df):
+                result.append(f"""Product ID = {df["id"].iloc[0]}""")
+                result.append(f"""Product Status = {df["status"].iloc[0]}""")
+                result.append(f"""Product Price = {df["price"].iloc[0]}""")
+            else:
+                result.append(f"No Product Present with ID = {t}")
+            return render_template('result.html', data=result)
+        elif request.method == 'GET':
+            return render_template('productDetail.html')
+
+    except Exception as e:
+        return render_template('error.html', message=str(e))
+
+
+# Dic Text Search Page
+@app.route("/textSearcher", methods=['POST', 'GET'])
 def text_searcher():
     try:
         if request.method == 'POST':
@@ -48,14 +84,13 @@ def text_searcher():
                     result.append(sentence)
 
             os.remove(file_path)
+            return render_template('result.html', data=result)
 
-            print(result)
-            print("*"*100)
-            
-            return render_template('result.html', data=text)
+        elif request.method == 'GET':
+            return render_template('docTextSearch.html')
     except Exception as e:
-        return Response(str(e))
+        return render_template('error.html', message=str(e))
 
 
 if __name__ == "__main__":
-    app.run(host='127.0.0.1',port=8001)
+    app.run()
