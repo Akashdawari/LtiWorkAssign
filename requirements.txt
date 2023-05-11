@@ -1,0 +1,5 @@
+flask==2.3.2
+docx2txt==0.8
+pytesseract==0.3.10
+Pillow==9.5.0
+pandas==2.0.1
